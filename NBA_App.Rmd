@@ -1,0 +1,341 @@
+---
+title: "Midterm4"
+author: "Nicky Moreno Gonzalez, Jafar Jarrar, Nichole Henning"
+date: "2025-04-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(shiny)
+library(tidyr)
+library(plotly)
+library(RColorBrewer)
+```
+
+## Data loading and cleaning
+
+Please run this file first (before the UI.Rmd file). Remember to adjust the paths below depending on where you have the starting CSVs. This file downloads three data frames (CSVs) into your computer that will be used for running the UI file.
+
+```{r}
+# Loading datasets
+nba <- read.csv("nbatable.csv")
+nba_season23.24 <- read.csv("nba_season23.24.csv")
+nba_season22.23 <- read.csv("nba_season22.23.csv")
+nba_season21.22 <- read.csv("nba_season21.22.csv")
+nba_season20.21 <- read.csv("nba_season20.21.csv")
+nba_season19.20 <- read.csv("nba_season19.20.csv")
+nba_season18.19 <- read.csv("nba_season18.19.csv")
+nba_season17.18 <- read.csv("nba_season17.18.csv")
+nba_season16.17 <- read.csv("nba_season16.17.csv")
+nba_season15.16 <- read.csv("nba_season15.16.csv")
+
+nba_totals <- read.csv("nba_totals.csv")
+
+# Adding a Year column
+nba$Year= as.character("2024-2025")
+nba_season23.24$Year= as.character("2023-2024")
+nba_season22.23$Year= as.character("2022-2023")
+nba_season21.22$Year= as.character("2021-2022")
+nba_season20.21$Year= as.character("2020-2021")
+nba_season19.20$Year= as.character("2019-2020")
+nba_season18.19$Year= as.character("2018-2019")
+nba_season17.18$Year= as.character("2017-2018")
+nba_season16.17$Year= as.character("2016-2017")
+nba_season15.16$Year= as.character("2015-2016")
+
+#Join the data 
+nba_general <- rbind(nba, nba_season23.24, nba_season22.23, nba_season21.22, nba_season20.21, nba_season19.20, nba_season18.19, nba_season17.18, nba_season16.17, nba_season15.16)
+```
+
+```{r}
+# Cleaning dataset containing player stats across 10 seasons
+
+nba_general <- nba_general %>%
+  rename(
+    Rank = X,
+    Player = X.1,
+    Age = X.2,
+    Team = X.3,
+    Pos = X.4,
+    Games = X.5,
+    GamesStarted = X.6,
+    MinutesPlayed = X.7,
+    "FG_perc" = X.8,
+    Dist = X.9,
+    "perc_FGA_2P" = X..of.FGA.by.Distance,
+    "perc_FGA_0to3" = X.10,
+    "perc_FGA_3to10" = X.11,
+    "perc_FGA_10to16" = X.12,
+    "perc_FGA_16to3P" = X.13,
+    "perc_FGA_3P" = X.14,
+    "perc_FG_2P" = FG..by.Distance,
+    "perc_FG_0to3" = X.15,
+    "perc_FG_3to10" = X.16,
+    "perc_FG_10to16" = X.17,
+    "perc_FG_16to3P" = X.18,
+    "perc_FG_3P" = X.19,
+    "perc_FG.Astd_2P" = X..of.FG.Ast.d,
+    "perc_FG.Astd_3P" = X.20,
+    "perc_FGA_Dunks" = Dunks,
+    "num_Dunks" = X.21,
+    "perc_FGA_Corners3P" = Corner.3s,
+    "perc_FG_Corners3P" = X.22,
+    "Heaves_Attempt" = Heaves,
+    "Heaves_Made" = X.23,
+    "Awards" = X.24
+  ) %>%
+  select(-Awards)
+
+nba_general[nba_general == ""] <- 0
+```
+
+```{r}
+# Cleaning 2024-2025 player statistics dataset
+
+# Storing 2024-2025 NBA top 150 player names for use in UI Player Selection
+player_names <- nba$X.1 %>% head(150)
+
+nba <- nba %>%
+  rename(
+    Rank = X,
+    Player = X.1,
+    Age = X.2,
+    Team = X.3,
+    Pos = X.4,
+    Games = X.5,
+    GamesStarted = X.6,
+    MinutesPlayed = X.7,
+    "FG_perc" = X.8,
+    Dist = X.9,
+    "perc_FGA_2P" = X..of.FGA.by.Distance,
+    "perc_FGA_0to3" = X.10,
+    "perc_FGA_3to10" = X.11,
+    "perc_FGA_10to16" = X.12,
+    "perc_FGA_16to3P" = X.13,
+    "perc_FGA_3P" = X.14,
+    "perc_FG_2P" = FG..by.Distance,
+    "perc_FG_0to3" = X.15,
+    "perc_FG_3to10" = X.16,
+    "perc_FG_10to16" = X.17,
+    "perc_FG_16to3P" = X.18,
+    "perc_FG_3P" = X.19,
+    "perc_FG.Astd_2P" = X..of.FG.Ast.d,
+    "perc_FG.Astd_3P" = X.20,
+    "perc_FGA_Dunks" = Dunks,
+    "num_Dunks" = X.21,
+    "perc_FGA_Corners3P" = Corner.3s,
+    "perc_FG_Corners3P" = X.22,
+    "Heaves_Attempt" = Heaves,
+    "Heaves_Made" = X.23,
+    "Awards" = X.24
+  ) %>%
+  select(-Awards)
+
+nba[nba == ""] <- 0
+
+# Unite player and team columns
+nba <- nba %>%
+  unite("Player_Team", Player, Team, sep = "_")
+```
+
+```{r}
+# Cleaning 2024-2025 player total statistics dataset
+
+nba_totals <- nba_totals %>%
+  rename(Games_Played = G, "3P" = X3P, "2P" = X2P) %>%
+  unite("Player_Team", Player, Team, sep = "_")
+```
+
+
+## Chart 1 data manipulation
+
+```{r}
+# Creating the field goal attempts stacked bar chart
+
+nba_chart1 <- nba %>%
+  select("Player_Team", "perc_FGA_0to3", "perc_FGA_3to10", "perc_FGA_10to16", "perc_FGA_16to3P", "perc_FGA_3P") %>%
+  rename(
+    "0 to 3" = "perc_FGA_0to3" ,
+    "3 to 10" = "perc_FGA_3to10" ,
+    "10 to 16" = "perc_FGA_10to16" ,
+    "16 to 3P" = "perc_FGA_16to3P",
+    "3P" = "perc_FGA_3P"
+  )
+
+nba_chart1_long <- pivot_longer(
+  nba_chart1,
+  cols      = "0 to 3":"3P",
+  names_to  = "Distance",
+  values_to = "value") %>%
+  mutate(value = as.numeric(value)) %>%
+  na.omit()
+
+nba_chart1_long$Distance <- factor(
+  nba_chart1_long$Distance,
+  levels = c("0 to 3", "3 to 10", "10 to 16", "16 to 3P", "3P")
+)
+```
+
+## Chart 2 data manipulation
+
+```{r}
+nba_chart2 <- nba %>%
+  select("Player_Team", "perc_FG_0to3", "perc_FG_3to10", "perc_FG_10to16", "perc_FG_16to3P", "perc_FG_3P") %>%
+  rename(
+    "0 to 3" = "perc_FG_0to3" ,
+    "3 to 10" = "perc_FG_3to10" ,
+    "10 to 16" = "perc_FG_10to16" ,
+    "16 to 3P" = "perc_FG_16to3P",
+    "3P" = "perc_FG_3P"
+  )
+```
+
+## Chart 3 data manipulation
+
+```{r}
+nba_chart3 <- nba_totals %>% 
+  select(Player_Team, Games_Played, MP, FG, "3P",
+         "2P", FT, ORB, DRB, TRB, AST, STL, BLK, TOV, PF, PTS) %>%
+  rename(
+    "Games Played" = "Games_Played",
+    "Minutes Played" = "MP",
+    "Field Goals" = "FG" ,
+    "3 Pointers" = "3P" ,
+    "2 Pointers" = "2P",
+    "Free Throws" = "FT",
+    "Offensive Rebounds" = "ORB",
+    "Defensive Rebounds" = "DRB",
+    "All Rebounds" = "TRB",
+    "Assists" = "AST",
+    "Steals" = "STL",
+    "Blocks" = "BLK",
+    "Turnovers" = "TOV",
+    "Personal Fouls" = "PF",
+    "Points" = "PTS"
+  )
+
+nba_chart3_long <- pivot_longer(
+  nba_chart3,
+  cols      = "Games Played":"Points",
+  names_to  = "TypeOfStat",
+  values_to = "TotalValue") %>%
+  mutate(TotalValue = as.numeric(TotalValue))
+
+nba_chart3_long$TypeOfStat <- factor(
+  nba_chart3_long$TypeOfStat,
+  levels = c("Points", "Field Goals", "3 Pointers", "2 Pointers", "Free Throws",
+             "Offensive Rebounds", "Defensive Rebounds", "All Rebounds", "Assists", "Steals", "Blocks",
+             "Turnovers", "Personal Fouls", "Games Played", "Minutes Played")
+)
+```
+
+## Chart 4 Data Manipulation
+
+```{r}
+player_progression <- nba_general %>%
+  filter(Player %in% player_names) %>% 
+  group_by(Player) %>%
+  summarize(Year=Year, Games = Games, GamesStarted = GamesStarted, MinutesPlayed = MinutesPlayed,
+            FG_perc = FG_perc, perc_FGA_2P = perc_FGA_2P, perc_FGA_0to3 = perc_FGA_0to3,
+            perc_FGA_3to10 = perc_FGA_3to10, perc_FGA_10to16 = perc_FGA_10to16, perc_FGA_16to3P = perc_FGA_16to3P,
+            perc_FGA_3P = perc_FGA_3P, perc_FG_2P = perc_FG_2P, perc_FG_0to3 = perc_FG_0to3,
+            perc_FG_3to10 = perc_FG_3to10, perc_FG_10to16 = perc_FG_10to16, perc_FG_16to3P = perc_FG_16to3P,
+            perc_FG_3P = perc_FG_3P, perc_FG.Astd_2P = perc_FG.Astd_2P, perc_FG.Astd_3P = perc_FG.Astd_3P,
+            perc_FGA_Dunks = perc_FGA_Dunks, perc_FGA_Corners3P = perc_FGA_Corners3P, perc_FG_Corners3P = perc_FG_Corners3P)
+```
+
+## Saving Cleaned and Manipulated Data
+
+```{r}
+write.csv(nba_chart1_long, "chart1and2_data.csv")
+write.csv(nba_chart3_long, "chart3_data.csv")
+write.csv(player_progression, "chart4_data.csv")
+```
+
+
+## Chart 1 Sketch
+
+```{r}
+nba_chart1_long_test <- filter(nba_chart1_long, Player_Team %in% c("Mikal Bridges_NYK", "Josh Hart_NYK"))
+
+n_distances <- length(unique(nba_chart1_long_test$Distance))
+
+# Pick a palette (like "Set2", "Set3", "Dark2", etc.)
+my_palette <- brewer.pal(n_distances, "Set2")
+
+plot_ly(data = nba_chart1_long_test,
+        x = ~Player_Team,
+        y = ~value,
+        color = ~Distance,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'stack',  # for stacked bars
+    title = "Proportion of Field Goal Attempts",
+    xaxis = list(title = "Player"),
+    yaxis = list(title = "", tickformat = "%"),  # percent format
+    legend = list(title = list(text = "Distance"))
+  )
+```
+
+## Chart 2 Sketch
+
+```{r}
+plot_ly(data = nba_chart1_long_test,
+        x = ~Distance,
+        y = ~value,
+        color = ~Player_Team,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'group',  # for dodge bar charts
+    title = "Percentage of Field Goals Made",
+    xaxis = list(title = "Type of Shot"),
+    yaxis = list(title = "", tickformat = "%"),  # percent format
+    legend = list(title = list(text = "Player"))
+  )
+```
+
+## Chart 3 Sketch
+
+```{r}
+nba_chart3_long_test <- filter(nba_chart3_long, Player_Team %in% c("Mikal Bridges_NYK", "Josh Hart_NYK"))
+
+n_distances2 <- length(unique(nba_chart3_long_test$TypeOfStat))
+
+# Pick a palette (like "Set2", "Set3", "Dark2", etc.)
+my_palette <- brewer.pal(n_distances2, "Set2")
+
+plot_ly(data = nba_chart3_long_test,
+        x = ~TypeOfStat,
+        y = ~TotalValue,
+        color = ~Player_Team,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'group',  # for dodge bar charts
+    title = "Season Totals",
+    xaxis = list(title = "Type of Statistic"),
+    yaxis = list(title = ""),  # percent format
+    legend = list(title = list(text = "Player"))
+  )
+```
+
+## Chart 4 Sketch
+
+```{r}
+#Example of player progression with Lebron James 
+nba_lebron <- nba_general %>%
+  filter(Player=="LeBron James") %>%
+  group_by(Player) %>%
+  summarize(Year=Year, FG_perc=FG_perc)
+
+#Rough Sketch 
+ggplot(data = nba_lebron, aes(x = Year, y = FG_perc, group = 1)) +
+  geom_point() +
+  geom_line()
+```

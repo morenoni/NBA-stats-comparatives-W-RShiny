@@ -1,0 +1,198 @@
+---
+title: "UI"
+author: "Nicky Moreno Gonzalez, Jafar Jarrar, Nichole Henning"
+date: "2025-05-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(shiny)
+library(tidyr)
+library(plotly)
+library(RColorBrewer)
+```
+
+## Loading Cleaned Data
+
+Please run the Midterm4.Rmd file before this file. Then, with the cleaned CSVs
+downloaded from running the previous file, adjust the paths below depending on where 
+the CSVs were downloaded.
+
+```{r}
+nba_chart1_long <- read.csv("chart1and2_data.csv")
+nba_chart3_long <- read.csv("chart3_data.csv")
+player_progression <- read.csv("chart4_data.csv")
+```
+
+## UI
+
+```{r}
+
+## Set up the UI object
+ui <- fluidPage(
+  navbarPage("NBA Statistics Visualizer",
+         tabPanel("Field Goal Attempts",
+                    titlePanel("2024-2025 Season Player Shot Attempts"), # First panel creation
+                  sidebarLayout(position = "left",
+                                sidebarPanel(selectInput(inputId = "player", label = "Choose your player(s):",
+                                                         choices = unique(nba_chart1_long$Player_Team), 
+                                                         multiple = TRUE, selected = c("Mikal Bridges_NYK",
+                                                                                       "Josh Hart_NYK")), # Default
+                                             selectInput(inputId = "palette", label = "Choose a Color Palette",
+                                                         choices = c("Set1", "Set2", "Set3", "Dark2", "Paired",
+                                                                     "Pastel1", "Pastel2", "Accent"), 
+                                                         selected = "Set2")),
+                                mainPanel(plotlyOutput('plot')))),
+         tabPanel("Shooting Accuracy",      # Second panel creation
+                    titlePanel("2024-2025 Season Player Percentage Shots Made"),
+                  sidebarLayout(position = "left",
+                                sidebarPanel(selectInput(inputId = "player2", label = "Choose your player(s):",
+                                                         choices = unique(nba_chart1_long$Player_Team), 
+                                                         multiple = TRUE, selected = c("Giannis Antetokounmpo_MIL",
+                                                                                       "Stephen Curry_GSW")),
+                                             selectInput(inputId = "type_of_shot", label = "Choose the shot ranges (ft)",
+                                                         choices = unique(nba_chart1_long$Distance), 
+                                                         multiple = TRUE, selected = c("0 to 3", "3 to 10")),
+                                             selectInput(inputId = "palette2", label = "Choose a Color Palette",
+                                                         choices = c("Set1", "Set2", "Set3", "Dark2", "Paired",
+                                                                     "Pastel1", "Pastel2", "Accent"), 
+                                                         selected = "Set2")),
+                                mainPanel(plotlyOutput('plot2')
+                                          )
+                                )
+                  ),
+         tabPanel("Season Totals",    # Third panel creation
+                    titlePanel("2024-2025 Season Player Statistic Totals"),
+                  sidebarLayout(position = "left",
+                                sidebarPanel(selectInput(inputId = "player3", label = "Choose your player(s):",
+                                                         choices = unique(nba_chart3_long$Player_Team), 
+                                                         multiple = TRUE, selected = c("Tyler Herro_MIA",
+                                                                                       "Cade Cunningham_DET")),
+                                             selectInput(inputId = "type_of_statistic", label = "Choose the type of statistic",
+                                                         choices = unique(nba_chart3_long$TypeOfStat), 
+                                                         multiple = TRUE, selected = c("Points", "Field Goals",
+                                                                                       "3 Pointers", "2 Pointers")),
+                                             selectInput(inputId = "palette3", label = "Choose a Color Palette",
+                                                         choices = c("Set1", "Set2", "Set3", "Dark2", "Paired",
+                                                                     "Pastel1", "Pastel2", "Accent"), 
+                                                         selected = "Set2")),
+                                mainPanel(plotlyOutput('plot3')))),
+         tabPanel("Player Progression",           # Fourth and Last panel creation
+                    titlePanel("10-year Player Progressions"),
+                  sidebarLayout(position = "left",
+                                sidebarPanel(selectInput(inputId = "player4", label = "Choose your player(s):",
+                                                         choices = unique(player_progression$Player), 
+                                                         multiple = TRUE, selected = c("LeBron James", "Stephen Curry")),
+                                             selectInput(inputId = "type_of_statistic2", label = "Choose the type of statistic",
+                                                         choices = colnames(player_progression)[3:23], selected = "FG_perc"),
+                                             selectInput(inputId = "seasons", label = "Choose the seasons to visualize",
+                                                         choices = c("2024-2025", "2023-2024", "2022-2023", "2021-2022",
+                                                                     "2020-2021", "2019-2020", "2018-2019",
+                                                                     "2017-2018", "2016-2017", "2015-2016"), 
+                                                         multiple = TRUE, selected = c("2024-2025", "2023-2024",
+                                                                                       "2022-2023", "2021-2022",
+                                                                                       "2020-2021"))),
+                                mainPanel(plotOutput('plot4', height = "600px"))))))
+
+## Set up the server function
+server <- function(input, output){
+
+  # Configuration of visual output for first graph
+output$plot <- renderPlotly({ 
+  nba_chart1_long_app <- filter(nba_chart1_long, Player_Team %in% input$player) # filter for user picked players.
+  
+  n_distances <- length(unique(nba_chart1_long_app$Distance))
+
+  # Pick a palette (like "Set2", "Set3", "Dark2", etc.)
+  my_palette <- brewer.pal(n_distances, input$palette)
+
+  plot_ly(nba_chart1_long_app,
+        x = ~Player_Team,
+        y = ~value,
+        color = ~Distance,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'stack',  # for stacked bars
+    title = "Proportion of Field Goal Attempts by Distance",
+    xaxis = list(title = "Player"),
+    yaxis = list(title = "", tickformat = "%"),  # percent format
+    legend = list(title = list(text = "Distance"))
+  )
+  })
+
+# Configuration of visual output for second graph
+output$plot2 <- renderPlotly({ 
+  nba_chart1_long_app <- filter(nba_chart1_long, Player_Team %in% input$player2,
+                                Distance %in% input$type_of_shot)
+  
+  n_distances <- length(unique(nba_chart1_long_app$Distance))
+
+  # Pick a palette (like "Set2", "Set3", "Dark2", etc.)
+  my_palette <- brewer.pal(n_distances, input$palette2)
+
+  plot_ly(data = nba_chart1_long_app,
+        x = ~Distance,
+        y = ~value,
+        color = ~Player_Team,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'group',  # for dodge bar charts
+    title = "Percentage of Field Goals Made",
+    xaxis = list(title = "Shot Range (ft)"),
+    yaxis = list(title = "", tickformat = "%"),  # percent format
+    legend = list(title = list(text = "Player"))
+  )
+  })
+
+# Configuration of visual output for third graph
+output$plot3 <- renderPlotly({ 
+  nba_chart3_long_app <- filter(nba_chart3_long, Player_Team %in% input$player3,
+                                TypeOfStat %in% input$type_of_statistic)
+  
+  n_distances <- length(unique(nba_chart3_long_app$TypeOfStat))
+
+  # Pick a palette (like "Set2", "Set3", "Dark2", etc.)
+  my_palette <- brewer.pal(n_distances, input$palette3)
+
+  plot_ly(data = nba_chart3_long_app,
+        x = ~TypeOfStat,
+        y = ~TotalValue,
+        color = ~Player_Team,
+        type = 'bar',
+        colors = my_palette) %>%
+  layout(
+    barmode = 'group',  # for dodge bar charts
+    title = "Statistic Totals",
+    xaxis = list(title = "Type of Statistic"),
+    yaxis = list(title = ""),  # percent format
+    legend = list(title = list(text = "Player"))
+  )
+  })
+
+# Configuration of visual output for fourth graph
+output$plot4 <- renderPlot({ 
+  player_progression_app <- filter(player_progression, Player %in% input$player4,
+                                Year %in% input$seasons)
+
+ggplot(data = player_progression_app, aes_string(x = "Year", y = input$type_of_statistic2, group = "Player", color = "Player")) +
+  geom_point() +
+  geom_line(size = 1.5) +
+  theme_linedraw() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 20),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 20)
+        )
+  })
+
+}
+
+## Build and run
+shinyApp(ui, server)
+```
