@@ -4,9 +4,11 @@ NBA stats comparative graphs  with RShiny. This will allow the user to select pl
 
 ## Instructions:
 
-1: Download all the files into the same folder
+1: Download all the files into the same folder.
 
-2: Open both **.Rmd** files in the same R session.
+2: Open both **.Rmd** files in the same RStudio session.
+
+3: Ensure your RStudio session is in the same directory than the dowloaded data.
 
 3: First run the **NBA_App.Rmd** file to handle data cleaning.
 
