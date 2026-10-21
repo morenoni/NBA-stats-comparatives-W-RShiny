@@ -252,10 +252,15 @@ player_progression <- nba_general %>%
 
 ## Saving Cleaned and Manipulated Data
 
+The three cleaned CSVs are written to the `output-data` folder, next to this file. They are created every time this file runs, and the UI file reads them from there.
+
 ```{r}
-write.csv(nba_chart1_long, "chart1and2_data.csv")
-write.csv(nba_chart3_long, "chart3_data.csv")
-write.csv(player_progression, "chart4_data.csv")
+output_dir <- "output-data"
+dir.create(output_dir, showWarnings = FALSE)   # makes the folder if it is missing
+
+write.csv(nba_chart1_long, file.path(output_dir, "chart1and2_data.csv"))
+write.csv(nba_chart3_long, file.path(output_dir, "chart3_data.csv"))
+write.csv(player_progression, file.path(output_dir, "chart4_data.csv"))
 ```
 
 

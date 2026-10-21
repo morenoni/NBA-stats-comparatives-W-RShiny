@@ -18,14 +18,15 @@ library(RColorBrewer)
 
 ## Loading Cleaned Data
 
-Please run the Midterm4.Rmd file before this file. Then, with the cleaned CSVs
-downloaded from running the previous file, adjust the paths below depending on where 
-the CSVs were downloaded.
+Please run the NBA_App.Rmd file before this file. It creates the three cleaned CSVs
+that this file reads from the `output-data` folder.
 
 ```{r}
-nba_chart1_long <- read.csv("chart1and2_data.csv")
-nba_chart3_long <- read.csv("chart3_data.csv")
-player_progression <- read.csv("chart4_data.csv")
+output_dir <- "output-data"
+
+nba_chart1_long <- read.csv(file.path(output_dir, "chart1and2_data.csv"))
+nba_chart3_long <- read.csv(file.path(output_dir, "chart3_data.csv"))
+player_progression <- read.csv(file.path(output_dir, "chart4_data.csv"))
 ```
 
 ## UI
