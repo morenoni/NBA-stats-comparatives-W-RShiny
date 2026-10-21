@@ -18,22 +18,24 @@ library(RColorBrewer)
 
 ## Data loading and cleaning
 
-Please run this file first (before the UI.Rmd file). Remember to adjust the paths below depending on where you have the starting CSVs. This file downloads three data frames (CSVs) into your computer that will be used for running the UI file.
+Please run this file first (before the UI.Rmd file). This file reads the raw CSVs from the `input-data` folder, which sits next to this file. It creates three cleaned data frames (CSVs) that are used for running the UI file.
 
 ```{r}
-# Loading datasets
-nba <- read.csv("nbatable.csv")
-nba_season23.24 <- read.csv("nba_season23.24.csv")
-nba_season22.23 <- read.csv("nba_season22.23.csv")
-nba_season21.22 <- read.csv("nba_season21.22.csv")
-nba_season20.21 <- read.csv("nba_season20.21.csv")
-nba_season19.20 <- read.csv("nba_season19.20.csv")
-nba_season18.19 <- read.csv("nba_season18.19.csv")
-nba_season17.18 <- read.csv("nba_season17.18.csv")
-nba_season16.17 <- read.csv("nba_season16.17.csv")
-nba_season15.16 <- read.csv("nba_season15.16.csv")
+# Loading datasets (the raw CSVs live in the input-data folder)
+input_dir <- "input-data"
 
-nba_totals <- read.csv("nba_totals.csv")
+nba <- read.csv(file.path(input_dir, "nbatable.csv"))
+nba_season23.24 <- read.csv(file.path(input_dir, "nba_season23.24.csv"))
+nba_season22.23 <- read.csv(file.path(input_dir, "nba_season22.23.csv"))
+nba_season21.22 <- read.csv(file.path(input_dir, "nba_season21.22.csv"))
+nba_season20.21 <- read.csv(file.path(input_dir, "nba_season20.21.csv"))
+nba_season19.20 <- read.csv(file.path(input_dir, "nba_season19.20.csv"))
+nba_season18.19 <- read.csv(file.path(input_dir, "nba_season18.19.csv"))
+nba_season17.18 <- read.csv(file.path(input_dir, "nba_season17.18.csv"))
+nba_season16.17 <- read.csv(file.path(input_dir, "nba_season16.17.csv"))
+nba_season15.16 <- read.csv(file.path(input_dir, "nba_season15.16.csv"))
+
+nba_totals <- read.csv(file.path(input_dir, "nba_totals.csv"))
 
 # Adding a Year column
 nba$Year= as.character("2024-2025")
