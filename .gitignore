@@ -1,0 +1,15 @@
+# The cleaned chart files NBA_App.Rmd creates every time it runs.
+# The output-data folder itself stays in the repository (see output-data/.gitkeep).
+output-data/*.csv
+
+# Documents made by knitting the .Rmd files
+NBA_App.html
+UI.html
+UI.pdf
+*_files/
+
+# R and macOS session files
+.Rproj.user/
+.Rhistory
+.RData
+.DS_Store
