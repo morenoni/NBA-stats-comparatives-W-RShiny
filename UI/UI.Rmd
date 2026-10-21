@@ -19,10 +19,19 @@ library(RColorBrewer)
 ## Loading Cleaned Data
 
 Please run the NBA_App.Rmd file before this file. It creates the three cleaned CSVs
-that this file reads from the `output-data` folder.
+that this file reads from the `output-data` folder, which is one level up from this
+`UI` folder.
 
 ```{r}
-output_dir <- "output-data"
+# The cleaned CSVs are in output-data, one folder up from this file.
+# (If R is running from the main project folder instead, look for output-data there.)
+output_dir <- "../output-data"
+if (!dir.exists(output_dir)) output_dir <- "output-data"
+
+chart_files <- c("chart1and2_data.csv", "chart3_data.csv", "chart4_data.csv")
+if (!all(file.exists(file.path(output_dir, chart_files)))) {
+  stop("The chart CSVs are missing from ", output_dir, ". Run NBA_App.Rmd first; it creates them.")
+}
 
 nba_chart1_long <- read.csv(file.path(output_dir, "chart1and2_data.csv"))
 nba_chart3_long <- read.csv(file.path(output_dir, "chart3_data.csv"))
